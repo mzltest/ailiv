@@ -321,7 +321,7 @@ class MyHandler(blivedm.BaseHandler):
 
 def get_args():
     global character_external_id, history_id, voiceargs, appid, appsec, proxy, token, voiceurl,TEST_ROOM_ID,gift_str_format,msg_str_format,USE_QQ_AUDIT
-    parser = argparse.ArgumentParser(description='跑路丸AI弹幕姬')
+    parser = argparse.ArgumentParser(description='跑路丸AI弹幕姬(也可以做其他角色)')
     parser.add_argument('--character_external_id', type=str, help='角色外部ID，在地址栏里',default='orLhLPUschHtNoqlFtJwU2vPz_HTLM-P8-sk5wV9U48')
     parser.add_argument('--history_id', type=str, help='会话历史，自己新建会话，依然在地址栏里')
     parser.add_argument('--tgt', type=str, help='内部id，F12看网络请求',default='internal_id:2d13b7c6-06cc-46da-8bb4-cbbf0b41fdb5')
