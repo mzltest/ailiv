@@ -75,31 +75,34 @@ async def chat(text):
     global tgt
     print(history_id)
     #greetings!
-    headers = {
-    'authority': 'beta.character.ai',
-    'accept': '*/*',
-    'accept-language': 'zh-CN,zh;q=0.9,en-CN;q=0.8,en;q=0.7',
-    'authorization': 'Token '+token,
-    'content-type': 'application/json',
-    'dnt': '1',
-    'origin': 'https://beta.character.ai',
-    'referer': 'https://beta.character.ai/',
-    'sec-ch-ua': '"Chromium";v="107", "Not=A?Brand";v="24"',
-    'sec-ch-ua-mobile': '?1',
-    'sec-ch-ua-platform': '"Android"',
-    'sec-fetch-dest': 'empty',
-    'sec-fetch-mode': 'cors',
-    'sec-fetch-site': 'same-origin',
-    'user-agent': 'Mozilla/5.0 (Linux; Android 10; TEL-AN00a) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Mobile Safari/537.36',
-}
-    json_data = {
+   
+    if tgt=='':
+        print('requesting tgt')
+        headers = {
+        'authority': 'beta.character.ai',
+        'accept': '*/*',
+        'accept-language': 'zh-CN,zh;q=0.9,en-CN;q=0.8,en;q=0.7',
+        'authorization': 'Token '+token,
+        'content-type': 'application/json',
+        'dnt': '1',
+        'origin': 'https://beta.character.ai',
+        'referer': 'https://beta.character.ai/',
+        'sec-ch-ua': '"Chromium";v="107", "Not=A?Brand";v="24"',
+        'sec-ch-ua-mobile': '?1',
+        'sec-ch-ua-platform': '"Android"',
+        'sec-fetch-dest': 'empty',
+        'sec-fetch-mode': 'cors',
+        'sec-fetch-site': 'same-origin',
+        'user-agent': 'Mozilla/5.0 (Linux; Android 10; TEL-AN00a) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Mobile Safari/537.36',
+        }
+        json_data = {
         'character_external_id': character_external_id,
-    }
-    response = await asyncio.get_running_loop().run_in_executor(None,partial( c_session.post,'https://beta.character.ai/chat/history/create/', cookies=cookies, headers=headers, json=json_data,proxy=proxy))
-    if response.status_code==200:
-        history_id=response.json()['external_id'] if history_id==None else history_id
-        tgt=response.json()['participants'][1]['user']['username'] if response.json()['participants'][1]['user']['username'].startswith('internal_id:') else response.json()['participants'][0]['user']['username']
-        print('nh>',history_id)
+        }
+        response = await asyncio.get_running_loop().run_in_executor(None,partial( c_session.post,'https://beta.character.ai/chat/history/create/', cookies=cookies, headers=headers, json=json_data,proxy=proxy))
+        if response.status_code==200:
+            history_id=response.json()['external_id'] if history_id==None else history_id
+            tgt=response.json()['participants'][1]['user']['username'] if response.json()['participants'][1]['user']['username'].startswith('internal_id:') else response.json()['participants'][0]['user']['username']
+            print('nh>',history_id)
 
         
     headers = {
@@ -323,24 +326,24 @@ class MyHandler(blivedm.BaseHandler):
 def get_args():
     global character_external_id, history_id, voiceargs, appid, appsec, proxy, token, voiceurl,TEST_ROOM_ID,gift_str_format,msg_str_format,USE_QQ_AUDIT
     parser = argparse.ArgumentParser(description='跑路丸AI弹幕姬(也可以做其他角色)')
-    parser.add_argument('--character_external_id', type=str, help='角色外部ID，在地址栏里',default='orLhLPUschHtNoqlFtJwU2vPz_HTLM-P8-sk5wV9U48')
-    parser.add_argument('--history_id', type=str, help='会话历史，自己新建会话，依然在地址栏里')
-    parser.add_argument('--tgt', type=str, help='内部id，F12看网络请求',default='internal_id:2d13b7c6-06cc-46da-8bb4-cbbf0b41fdb5')
-    parser.add_argument('--appid', type=str, help='qqaudit=True用，小程序appid，用于文本审核，没有自己去q.qq.com注册')
-    parser.add_argument('--appsec', type=str, help='qqaudit=True用，小程序secret，同上')
-    parser.add_argument('--proxy', type=str, help='系统代理地址，因为c.ai国内上不去')
-    parser.add_argument('-token', type=str, help='c.ai的token，在authencation头')
-    parser.add_argument('--voiceurl', type=str, help='tts api地址，不带最后的斜杠',default='https://mzltest-vits-uma-genshin-honkai.hf.space')
-    parser.add_argument('-room', type=int, help='房号',required=True)
-    parser.add_argument('--msg_str_format', type=str, help='msg_str_format.format(resp=resp,uname=message.uname,msg=message.msg)',default='{uname}说{msg}，我觉得{resp}')
-    parser.add_argument('--gift_str_format', type=str, help='gift_str_format.format(gift=message.gift_name,num=message.num,uname=message.uname)',default='')
-    parser.add_argument('--qqaudit',type=bool,help='用qq小程序那边的审核(默认是腾讯云的那个demo)，未测试',default=False)
-    parser.add_argument('--voiceargs',nargs=5,help='语音合成选项',default=["中文", "group", 0.6 ,0.668, 1.2])
+    parser.add_argument('--character_external_id','-c', type=str, help='角色外部ID，在地址栏里',default='orLhLPUschHtNoqlFtJwU2vPz_HTLM-P8-sk5wV9U48')
+    parser.add_argument('--history_id','-hi', type=str, help='会话历史，自己新建会话，依然在地址栏里')
+#    parser.add_argument('--tgt', type=str, help='内部id，F12看网络请求',default='internal_id:2d13b7c6-06cc-46da-8bb4-cbbf0b41fdb5')
+    parser.add_argument('--appid','-ai', type=str, help='qqaudit=True用，小程序appid，用于文本审核，没有自己去q.qq.com注册')
+    parser.add_argument('--appsec','-as', type=str, help='qqaudit=True用，小程序secret，同上')
+    parser.add_argument('--proxy','-p', type=str, help='系统代理地址，因为c.ai国内上不去')
+    parser.add_argument('-token','-t', type=str, help='c.ai的token，在authencation头')
+    parser.add_argument('--voiceurl','-vu', type=str, help='tts api地址，不带最后的斜杠',default='https://mzltest-vits-uma-genshin-honkai.hf.space')
+    parser.add_argument('-room','-r', type=int, help='房号',required=True)
+    parser.add_argument('--msg_str_format', '-mf',type=str, help='msg_str_format.format(resp=resp,uname=message.uname,msg=message.msg)',default='{uname}说{msg}，我觉得{resp}')
+    parser.add_argument('--gift_str_format','-gf', type=str, help='gift_str_format.format(gift=message.gift_name,num=message.num,uname=message.uname)',default='')
+    parser.add_argument('--qqaudit','-qa',type=bool,help='用qq小程序那边的审核(默认是腾讯云的那个demo)，未测试',default=False)
+    parser.add_argument('--voiceargs','-va',nargs=5,help='语音合成选项',default=["中文", "group", 0.6 ,0.668, 1.2])
 
     args = parser.parse_args()
     character_external_id = args.character_external_id
     history_id = args.history_id
-    tgt = args.tgt
+#    tgt = args.tgt
     appid = args.appid
     appsec = args.appsec
     proxy = args.proxy
