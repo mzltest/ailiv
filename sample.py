@@ -218,6 +218,7 @@ async def generate_and_play(text: str):
     # 构造请求数据
     voiceargs[2]=float(voiceargs[2])
     voiceargs[3]=float(voiceargs[3])
+    voiceargs[4]=float(voiceargs[4])
     text=[text]
     text.extend(voiceargs)
     print(text)
