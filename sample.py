@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 import asyncio
-import random,json,time
 from functools import partial
 import blivedm
-import requests
 import tls_client
 import aiohttp
 import pyaudio
@@ -71,16 +69,33 @@ async def chat(text):
         return '没有access_token，尚未初始化'
     global history_id
     global tgt
-    if history_id=='':
+    print(history_id)
     #greetings!
-        json_data = {
-        'character_external_id': text,
+    headers = {
+    'authority': 'beta.character.ai',
+    'accept': '*/*',
+    'accept-language': 'zh-CN,zh;q=0.9,en-CN;q=0.8,en;q=0.7',
+    'authorization': 'Token '+token,
+    'content-type': 'application/json',
+    'dnt': '1',
+    'origin': 'https://beta.character.ai',
+    'referer': 'https://beta.character.ai/',
+    'sec-ch-ua': '"Chromium";v="107", "Not=A?Brand";v="24"',
+    'sec-ch-ua-mobile': '?1',
+    'sec-ch-ua-platform': '"Android"',
+    'sec-fetch-dest': 'empty',
+    'sec-fetch-mode': 'cors',
+    'sec-fetch-site': 'same-origin',
+    'user-agent': 'Mozilla/5.0 (Linux; Android 10; TEL-AN00a) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Mobile Safari/537.36',
+}
+    json_data = {
+        'character_external_id': character_external_id,
     }
-        response = await asyncio.get_running_loop().run_in_executor(None,partial( c_session.post,'https://beta.character.ai/chat/history/create/', cookies=cookies, headers=headers, json=json_data,proxy=proxy))
-        if response.status_code==200:
-            history_id=response.json()['external_id']
-            tgt=response.json()['participants'][1]['user']['username']
-            print('nh>',history_id)
+    response = await asyncio.get_running_loop().run_in_executor(None,partial( c_session.post,'https://beta.character.ai/chat/history/create/', cookies=cookies, headers=headers, json=json_data,proxy=proxy))
+    if response.status_code==200:
+        history_id=response.json()['external_id'] if history_id==None else history_id
+        tgt=response.json()['participants'][1]['user']['username'] if response.json()['participants'][1]['user']['username'].startswith('internal_id:') else response.json()['participants'][0]['user']['username']
+        print('nh>',history_id)
 
         
     headers = {
@@ -173,13 +188,12 @@ async def generate_and_play(text: str):
         'Content-Type': 'application/xml',
         'Origin': 'https://cloud.tencent.com',
         'x-ci-security-token': access_token['XCosSecurityToken']    }
-        content =  base64.b64encode(text.encode("utf-8")).decode("utf-8")
         detect_type = "Porn,Terrorism,Politics,Ads,Illegal,Abuse"
         callback = ""
         xml_content = ET.Element("Request")
         input_element = ET.SubElement(xml_content, "Input")
         content_element = ET.SubElement(input_element, "Content")
-        content_element.text = base64.b64encode(content.encode("utf-8")).decode("utf-8")
+        content_element.text = base64.b64encode(text.encode("utf-8")).decode("utf-8")
         conf_element = ET.SubElement(xml_content, "Conf")
         detect_type_element = ET.SubElement(conf_element, "DetectType")
         detect_type_element.text = detect_type
@@ -187,21 +201,22 @@ async def generate_and_play(text: str):
         callback_element.text = callback
         xml_str = ET.tostring(xml_content, encoding="utf-8", method="xml")
         async with aiohttp.ClientSession() as session:
-            try:
-                async with session.post(url, headers=headers, data=xml_str) as response:
-                    response_text = await response.text()
-                    root = ET.fromstring(response_text)
-                    label = root.find('./JobsDetail/Label').text
-                    if label!='Normal':
-                        raise ValueError(f'输出违规：{label}={text}')
-                    return text
-            except:
-                print('出错自动放行')
+
+            async with session.post(url, headers=headers, data=xml_str) as response:
+                response_text = await response.text()
+                root = ET.fromstring(response_text)
+                label = root.find('./JobsDetail/Label').text
+                if label!='Normal':
+                    raise ValueError(f'输出违规：{label}={text}')
+                print('audit pass')
+
 
     # 构造请求数据
+    voiceargs[2]=float(voiceargs[2])
     voiceargs[3]=float(voiceargs[3])
-    voiceargs[4]=float(voiceargs[4])
-    [text].extend(voiceargs)
+    text=[text]
+    text.extend(voiceargs)
+    print(text)
     payload = {"data": text}
 
     async with aiohttp.ClientSession() as session:
@@ -281,11 +296,14 @@ class MyHandler(blivedm.BaseHandler):
         if message.msg=='赞':
             return
         print(f'[{client.room_id}] {message.uname}：{message.msg}')
-        resp=await chat(message.msg)
+        if '{resp}' in msg_str_format:
+            resp=await chat(message.msg)
+        else:
+            resp=''
         print (msg_str_format.format(resp=resp,uname=message.uname,msg=message.msg))
         await generate_and_play(msg_str_format.format(resp=resp,uname=message.uname,msg=message.msg))
 
-    #async def _on_gift(self, client: blivedm.BLiveClient, message: blivedm.GiftMessage):
+    async def _on_gift(self, client: blivedm.BLiveClient, message: blivedm.GiftMessage):
         #print(f'[{client.room_id}] {message.uname} 赠送{message.gift_name}x{message.num}'
         #      f' （{message.coin_type}瓜子x{message.total_coin}）')
         print(gift_str_format.format(gift=message.gift_name,num=message.num,uname=message.uname,msg=message.msg))
@@ -298,7 +316,7 @@ class MyHandler(blivedm.BaseHandler):
     #    print(f'[{client.room_id}] 醒目留言 ¥{message.price} {message.uname}：{message.message}')
 
 def get_args():
-    global character_external_id, history_id, tgt, access_token, appid, appsec, proxy, token, voiceurl,TEST_ROOM_ID,gift_str_format,msg_str_format,USE_QQ_AUDIT
+    global character_external_id, history_id, voiceargs, appid, appsec, proxy, token, voiceurl,TEST_ROOM_ID,gift_str_format,msg_str_format,USE_QQ_AUDIT
     parser = argparse.ArgumentParser(description='跑路丸AI弹幕姬')
     parser.add_argument('--character_external_id', type=str, help='角色外部ID，在地址栏里',default='orLhLPUschHtNoqlFtJwU2vPz_HTLM-P8-sk5wV9U48')
     parser.add_argument('--history_id', type=str, help='会话历史，自己新建会话，依然在地址栏里')
@@ -308,11 +326,11 @@ def get_args():
     parser.add_argument('--proxy', type=str, help='系统代理地址，因为c.ai国内上不去')
     parser.add_argument('-token', type=str, help='c.ai的token，在authencation头')
     parser.add_argument('--voiceurl', type=str, help='tts api地址，不带最后的斜杠',default='https://mzltest-vits-uma-genshin-honkai.hf.space')
-    parser.add_argument('-room', type=int, help='房号')
+    parser.add_argument('-room', type=int, help='房号',required=True)
     parser.add_argument('--msg_str_format', type=str, help='msg_str_format.format(resp=resp,uname=message.uname,msg=message.msg)',default='{uname}说{msg}，我觉得{resp}')
     parser.add_argument('--gift_str_format', type=str, help='gift_str_format.format(gift=message.gift_name,num=message.num,uname=message.uname)',default='')
     parser.add_argument('--qqaudit',type=bool,help='用qq小程序那边的审核(默认是腾讯云的那个demo)，未测试',default=False)
-    parser.add_argument('--voiceargs',nargs=5,help='语音合成选项',default="中文 group 0.6 0.668 1.2")
+    parser.add_argument('--voiceargs',nargs=5,help='语音合成选项',default=["中文", "group", 0.6 ,0.668, 1.2])
 
     args = parser.parse_args()
     character_external_id = args.character_external_id
@@ -328,6 +346,7 @@ def get_args():
     gift_str_format=args.gift_str_format
     USE_QQ_AUDIT=args.qqaudit
     voiceargs=args.voiceargs
+    print(voiceargs)
 
 
 if __name__ == '__main__':
