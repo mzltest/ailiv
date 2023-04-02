@@ -10,6 +10,10 @@ import io
 import xml.etree.ElementTree as ET
 import base64
 import argparse
+
+import sys
+if sys.version_info[0] == 3 and sys.version_info[1] >= 8 and sys.platform.startswith('win'):
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 c_session = tls_client.Session(
 
     client_identifier="chrome107",
