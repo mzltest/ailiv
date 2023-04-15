@@ -228,7 +228,7 @@ async def generate_and_play(text: str):
     payload = {"data": text}
 
     async with aiohttp.ClientSession() as session:
-        async with session.post(f'{voiceurl}/api/generate', json=payload,proxy=proxy) as response:
+        async with session.post(f'{voiceurl}/run/go', json=payload,proxy=proxy) as response:
             if response.status == 200:
                 result = await response.json()
                 name = result['data'][1]['name']
