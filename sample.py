@@ -219,9 +219,9 @@ async def generate_and_play(text: str):
 
 
     # 构造请求数据
+
+
     voiceargs[2]=float(voiceargs[2])
-    voiceargs[3]=float(voiceargs[3])
-    voiceargs[4]=float(voiceargs[4])
     text=[text]
     text.extend(voiceargs)
     print(text)
@@ -333,12 +333,12 @@ def get_args():
     parser.add_argument('--appsec','-as', type=str, help='qqaudit=True用，小程序secret，同上')
     parser.add_argument('--proxy','-p', type=str, help='系统代理地址，因为c.ai国内上不去')
     parser.add_argument('-token','-t', type=str, help='c.ai的token，在authencation头')
-    parser.add_argument('--voiceurl','-vu', type=str, help='tts api地址，不带最后的斜杠',default='https://mzltest-sayplw.hf.space')
+    parser.add_argument('--voiceurl','-vu', type=str, help='tts api地址，不带最后的斜杠',default='https://mzltest-plw-new.hf.space')
     parser.add_argument('-room','-r', type=int, help='房号',required=True)
     parser.add_argument('--msg_str_format', '-mf',type=str, help='msg_str_format.format(resp=resp,uname=message.uname,msg=message.msg)',default='{uname}说{msg}，我觉得{resp}')
     parser.add_argument('--gift_str_format','-gf', type=str, help='gift_str_format.format(gift=message.gift_name,num=message.num,uname=message.uname)',default='')
     parser.add_argument('--qqaudit','-qa',type=bool,help='用qq小程序那边的审核(默认是腾讯云的那个demo)，未测试',default=False)
-    parser.add_argument('--voiceargs','-va',nargs=5,help='语音合成选项，照着界面按顺序填，具体忘了',default=["中文", "group", 0.6 ,0.668, 1.2])
+    parser.add_argument('--voiceargs','-va',nargs=5,help='语音合成选项，照着界面按顺序填，具体忘了',default=[ "group", "简体中文" ,1])
 
     args = parser.parse_args()
     character_external_id = args.character_external_id
